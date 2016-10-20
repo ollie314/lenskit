@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -21,18 +21,17 @@
 package org.lenskit.knn.item
 
 import org.grouplens.lenskit.test.CrossfoldTestSuite
-import org.grouplens.lenskit.transform.normalize.BaselineSubtractingUserVectorNormalizer
-import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer
+import org.lenskit.transform.normalize.BiasUserVectorNormalizer
+import org.lenskit.transform.normalize.UserVectorNormalizer
 import org.grouplens.lenskit.vectors.similarity.SimilarityDamping
 import org.lenskit.LenskitConfiguration
 import org.lenskit.api.ItemScorer
 import org.lenskit.baseline.BaselineScorer
-import org.lenskit.baseline.ItemMeanRatingItemScorer
-import org.lenskit.baseline.UserMeanBaseline
-import org.lenskit.baseline.UserMeanItemScorer
+import org.lenskit.bias.BiasItemScorer
+import org.lenskit.bias.BiasModel
+import org.lenskit.bias.UserItemBiasModel
 import org.lenskit.config.ConfigHelpers
 import org.lenskit.eval.traintest.SimpleEvaluator
-import org.lenskit.eval.traintest.TrainTestExperiment
 import org.lenskit.eval.traintest.recommend.RecommendEvalTask
 import org.lenskit.eval.traintest.recommend.TopNMAPMetric
 import org.lenskit.knn.NeighborhoodSize
@@ -60,9 +59,9 @@ public class ItemItemAccuracyTest extends CrossfoldTestSuite {
     protected void configureAlgorithm(LenskitConfiguration config) {
         ConfigHelpers.configure(config) {
             bind ItemScorer to ItemItemScorer
-            bind (BaselineScorer, ItemScorer) to UserMeanItemScorer
-            bind (UserMeanBaseline, ItemScorer) to ItemMeanRatingItemScorer
-            bind UserVectorNormalizer to BaselineSubtractingUserVectorNormalizer
+            bind (BaselineScorer, ItemScorer) to BiasItemScorer
+            bind BiasModel to UserItemBiasModel
+            bind UserVectorNormalizer to BiasUserVectorNormalizer
             within (ItemSimilarity) {
                 set SimilarityDamping to 100.0
             }

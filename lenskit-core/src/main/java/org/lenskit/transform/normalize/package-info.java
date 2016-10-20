@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -22,4 +22,4 @@
  * Interfaces and classes for data normalization. Normalization is typically
  * done prior to training a recommender.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;

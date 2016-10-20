@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -29,12 +29,14 @@ import it.unimi.dsi.fastutil.ints.IntBidirectionalIterator;
 import it.unimi.dsi.fastutil.ints.IntIterators;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.*;
+import org.lenskit.util.collections.CollectionUtils;
 import org.lenskit.util.collections.LongUtils;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import static it.unimi.dsi.fastutil.Arrays.quickSort;
 
@@ -55,6 +57,11 @@ public final class Long2DoubleSortedArrayMap extends AbstractLong2DoubleSortedMa
         values = vs;
     }
 
+    /**
+     * Create a new map with existing data.
+     * @param data Use {@link #create(Map)} instead, as it can avoid copying maps that are already packed.
+     */
+    @Deprecated
     public Long2DoubleSortedArrayMap(Map<Long,Double> data) {
         Long2DoubleFunction vf = LongUtils.asLong2DoubleFunction(data);
         keys = SortedKeyIndex.fromCollection(data.keySet());
@@ -62,6 +69,23 @@ public final class Long2DoubleSortedArrayMap extends AbstractLong2DoubleSortedMa
         values = new double[size];
         for (int i = 0; i < size; i++) {
             values[i] = vf.get(keys.getKey(i));
+        }
+    }
+
+    /**
+     * Create a new long-to-double sorted array map from another map.
+     *
+     * Using this method instead of the constructor allows copies of immutable vectors
+     * to be skipped.
+     *
+     * @param input The vector to copy.
+     * @return A new vector with the same data as {@code input}.
+     */
+    public static Long2DoubleSortedArrayMap create(Long2DoubleMap input) {
+        if (input instanceof Long2DoubleSortedArrayMap) {
+            return (Long2DoubleSortedArrayMap) input;
+        } else {
+            return new Long2DoubleSortedArrayMap(input);
         }
     }
 
@@ -131,13 +155,27 @@ public final class Long2DoubleSortedArrayMap extends AbstractLong2DoubleSortedMa
         return wrap(index, nvs);
     }
 
+    /**
+     * Create a new sorted array map from input data.
+     * @param data The input data.
+     * @return The sorted array map.
+     */
+    @SuppressWarnings("deprecation")
+    public static Long2DoubleSortedArrayMap create(Map<Long,Double> data) {
+        if (data instanceof Long2DoubleSortedArrayMap) {
+            return (Long2DoubleSortedArrayMap) data;
+        } else {
+            return new Long2DoubleSortedArrayMap(data);
+        }
+    }
+
     @Override
     public FastSortedEntrySet long2DoubleEntrySet() {
         return new EntrySet();
     }
 
     @Override
-    public LongSortedSet keySet() {
+    public LongSortedArraySet keySet() {
         return keys.keySet();
     }
 
@@ -173,6 +211,34 @@ public final class Long2DoubleSortedArrayMap extends AbstractLong2DoubleSortedMa
         int startIdx = keys.findLowerBound(from); // include 'from'
         int endIdx = keys.findLowerBound(to); // lower bound so we don't include 'to'
         return createSubMap(startIdx, endIdx);
+    }
+
+    /**
+     * Return a subset of this map containing only the keys that appear in another set.
+     * @param toKeep The set of keys to keep.
+     * @return A copy of this map containing only those keys that appear in {@code keys}.
+     */
+    public Long2DoubleSortedMap subMap(LongSet toKeep) {
+        if (toKeep == keySet()) {
+            return this;
+        }
+
+        LongSortedSet kept = LongUtils.setIntersect(keySet(), toKeep);
+        double[] nvs = new double[kept.size()];
+        int i = keys.getLowerBound();
+        int j = 0;
+        LongIterator iter = kept.iterator();
+        while (iter.hasNext()) {
+            long key = iter.nextLong();
+            while (keys.getKey(i) < key) {
+                i++;
+                assert i <= keys.getUpperBound();
+            }
+            nvs[j] = values[i];
+            j++;
+            i++;
+        }
+        return wrap(SortedKeyIndex.fromCollection(kept), nvs);
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -25,8 +25,8 @@ import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongIterators;
 import org.grouplens.lenskit.symbols.Symbol;
-import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
-import org.grouplens.lenskit.transform.normalize.VectorTransformation;
+import org.lenskit.transform.normalize.UserVectorNormalizer;
+import org.lenskit.transform.normalize.VectorTransformation;
 import org.lenskit.util.ScoredIdAccumulator;
 import org.lenskit.util.TopNScoredIdAccumulator;
 import org.lenskit.util.UnlimitedScoredIdAccumulator;

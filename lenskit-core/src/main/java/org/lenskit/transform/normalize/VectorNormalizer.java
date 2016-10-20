@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,11 +18,13 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.grapht.annotation.DefaultImplementation;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
+import org.lenskit.util.InvertibleFunction;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -57,7 +59,9 @@ public interface VectorNormalizer {
      *                  copy of <var>reference</var> is created.
      * @return <var>target</var>, or a normalized mutable copy of
      *         <var>reference</var> if <var>target</var> is {@code null}.
+     * @deprecated Old vectors are going away.
      */
+    @Deprecated
     MutableSparseVector normalize(@Nonnull SparseVector reference,
                                   @Nullable MutableSparseVector target);
 
@@ -75,7 +79,28 @@ public interface VectorNormalizer {
      *
      * @param reference The reference vector.
      * @return A transformation built from the reference vector.
+     * @deprecated Use {@link #makeTransformation(Long2DoubleMap)}.
      */
+    @Deprecated
     VectorTransformation makeTransformation(SparseVector reference);
 
+    /**
+     * Create a vector transformation that normalizes and denormalizes vectors
+     * with respect to a reference vector.  The reference vector is used to compute any data needed for the
+     * normalization.  For example, a mean-centering normalization will subtract the mean of the reference vector
+     * from any vector to which it is applied, and add back the reference mean when it is unapplied.
+     *
+     * <p>This allows transformations to be applied multiple times to different vectors and also unapplied.
+     * <p>
+     * If the reference vector is empty, the returned transformation should be
+     * the identity transform. Results are undefined if the reference vector is
+     * not complete or contains NaN values.
+     * <p>
+     * If the normalization needs to retain a copy of the sparse vector, it will
+     * take an immutable copy.
+     *
+     * @param reference The reference vector.
+     * @return A transformation built from the reference vector.
+     */
+    InvertibleFunction<Long2DoubleMap,Long2DoubleMap> makeTransformation(Long2DoubleMap reference);
 }

@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -130,6 +130,25 @@ public class Long2DoubleSortedArrayMapTest {
         assertThat(sub.containsKey(5L), equalTo(false));
         assertThat(sub.containsKey(4L), equalTo(true));
         assertThat(sub.keySet(), contains(2L, 3L, 4L));
+    }
+
+    @Test
+    public void testSubMap() {
+        SortedKeyIndex idx = SortedKeyIndex.create(1, 2, 3, 4, 5);
+        double[] values = { 1.5, 2.4, -3.2, 4.3, -5.7 };
+        Long2DoubleSortedArrayMap map = new Long2DoubleSortedArrayMap(idx, values);
+        assertThat(map.size(), equalTo(5));
+
+        Long2DoubleSortedMap sub = map.subMap(LongUtils.packedSet(2L, 4L));
+        assertThat(sub.size(), equalTo(2));
+        assertThat(sub.containsKey(2L), equalTo(true));
+        assertThat(sub.containsKey(1L), equalTo(false));
+        assertThat(sub.containsKey(5L), equalTo(false));
+        assertThat(sub.containsKey(4L), equalTo(true));
+        assertThat(sub.containsKey(3L), equalTo(false));
+        assertThat(sub.keySet(), contains(2L, 4L));
+        assertThat(sub, hasEntry(2L, 2.4));
+        assertThat(sub, hasEntry(4L, 4.3));
     }
 
     @Test

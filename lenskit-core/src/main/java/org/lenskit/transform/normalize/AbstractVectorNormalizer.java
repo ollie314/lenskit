@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,7 +18,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
@@ -27,27 +27,26 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Abstract user vector normalizer implementation.
+ * Abstract vector normalizer implementation.
  *
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
- * @since 0.11
  */
-public abstract class AbstractUserVectorNormalizer implements UserVectorNormalizer {
+public abstract class AbstractVectorNormalizer implements VectorNormalizer {
 
     /**
      * {@inheritDoc}
-     * <p>Delegates to {@link #makeTransformation(long, SparseVector)}
-     * and the resulting {@link VectorTransformation}.
+     * <p>Delegates to {@link #makeTransformation(SparseVector)} and the
+     * resulting {@link VectorTransformation}.
      */
     @Override
-    public MutableSparseVector normalize(long user, @Nonnull SparseVector vector,
+    public MutableSparseVector normalize(@Nonnull SparseVector reference,
                                          @Nullable MutableSparseVector target) {
         MutableSparseVector v = target;
         if (v == null) {
-            v = vector.mutableCopy();
+            v = reference.mutableCopy();
         }
 
-        VectorTransformation tform = makeTransformation(user, vector);
+        VectorTransformation tform = makeTransformation(reference);
         return tform.apply(v);
     }
 }

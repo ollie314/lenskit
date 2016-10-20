@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -27,7 +27,6 @@ import it.unimi.dsi.fastutil.longs.LongSortedSet;
 import it.unimi.dsi.fastutil.longs.LongSortedSets;
 import org.grouplens.grapht.annotation.DefaultProvider;
 import org.lenskit.inject.Shareable;
-import org.grouplens.lenskit.transform.normalize.VectorNormalizer;
 import org.grouplens.lenskit.vectors.SparseVector;
 import org.lenskit.inject.Transient;
 import org.lenskit.util.keys.SortedKeyIndex;
@@ -89,7 +88,7 @@ public class ItemItemBuildContext implements Serializable {
 
     /**
      * Get the rating vector for an item. Rating vectors contain normalized ratings,
-     * using the applicable {@link VectorNormalizer} on the user rating vectors.
+     * using the applicable user-vector normalizer on the user rating vectors.
      *
      * @param item The item to query.
      * @return The rating vector for {@code item}.

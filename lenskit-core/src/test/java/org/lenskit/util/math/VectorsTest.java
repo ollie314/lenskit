@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -21,6 +21,7 @@
 package org.lenskit.util.math;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMaps;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import org.junit.Test;
 import org.lenskit.util.keys.Long2DoubleSortedArrayMap;
@@ -105,5 +106,80 @@ public class VectorsTest {
                            closeTo(Vectors.sumOfSquares(m) - v1 * v1, 1.0e-6));
             }
         }
+    }
+
+    @Test
+    public void testAddScalar() {
+        for (Map<Long,Double> map: someMaps(longs(), doubles(-1000, 1000))) {
+            double scalar = doubles(-250, 250).next();
+            Long2DoubleMap m = new Long2DoubleOpenHashMap(map);
+
+            Long2DoubleMap result = Vectors.addScalar(m, scalar);
+            assertThat(Vectors.sum(result), closeTo(Vectors.sum(m) + m.size() * scalar, 1.0e-6));
+
+            for (long key: result.keySet()) {
+                assertThat(result.get(key), closeTo(map.get(key) + scalar, 1.0e-6));
+            }
+        }
+    }
+
+    @Test
+    public void testAddScalarSorted() {
+        for (Map<Long,Double> map: someMaps(longs(), doubles(-1000, 1000))) {
+            double scalar = doubles(-250, 250).next();
+            Long2DoubleMap m = Long2DoubleSortedArrayMap.create(map);
+
+            Long2DoubleMap result = Vectors.addScalar(m, scalar);
+            assertThat(Vectors.sum(result), closeTo(Vectors.sum(m) + m.size() * scalar, 1.0e-6));
+
+            for (long key: result.keySet()) {
+                assertThat(result.get(key), closeTo(map.get(key) + scalar, 1.0e-6));
+            }
+        }
+    }
+
+    @Test
+    public void testMultiplyScalar() {
+        assertThat(Vectors.multiplyScalar(EMPTY_MAP, 2).size(),
+                   equalTo(0));
+        Long2DoubleMap result;
+
+        result = Vectors.multiplyScalar(singleton(42, 3), 2);
+        assertThat(result.keySet(), contains(42L));
+        assertThat(result, hasEntry(42L, 6.0));
+
+        Long2DoubleMap input = new Long2DoubleOpenHashMap();
+        input.put(42L, 5);
+        input.put(22L, -2);
+        result = Vectors.multiplyScalar(input, -1);
+        assertThat(result.keySet(), containsInAnyOrder(42L, 22L));
+        assertThat(result, hasEntry(42L, -5.0));
+        assertThat(result, hasEntry(22L, 2.0));
+    }
+
+    @Test
+    public void testCombine() {
+        Long2DoubleMap x = new Long2DoubleOpenHashMap();
+        x.put(4L, 3.5);
+        x.put(5L, 4.0);
+        Long2DoubleMap y = Long2DoubleMaps.singleton(4L, 0.5);
+
+        Long2DoubleMap res = Vectors.combine(x, y, 2, 1);
+        assertThat(res.get(4L), closeTo(5.5, 1e-6));
+        assertThat(res.get(5L), closeTo(5.0, 1e-6));
+        assertThat(res.get(1L), equalTo(0.0));
+    }
+
+    @Test
+    public void testCombineSorted() {
+        Long2DoubleMap x = new Long2DoubleOpenHashMap();
+        x.put(4L, 3.5);
+        x.put(5L, 4.0);
+        Long2DoubleMap y = Long2DoubleMaps.singleton(4L, 0.5);
+
+        Long2DoubleMap res = Vectors.combine(Long2DoubleSortedArrayMap.create(x), y, 2, 1);
+        assertThat(res.get(4L), closeTo(5.5, 1e-6));
+        assertThat(res.get(5L), closeTo(5.0, 1e-6));
+        assertThat(res.get(1L), equalTo(0.0));
     }
 }

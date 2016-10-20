@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -52,6 +52,7 @@ import java.util.*;
  * @deprecated Scored IDs are going away in LensKit 3.0.
  */
 @Deprecated
+@SuppressWarnings("deprecation")
 public final class PackedScoredIdList extends AbstractList<ScoredId> implements Collection<ScoredId>, Serializable {
     private static final long serialVersionUID = 1L;
     private final LongList ids;

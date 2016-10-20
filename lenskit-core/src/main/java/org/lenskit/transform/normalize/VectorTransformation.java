@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,16 +18,18 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
+import org.lenskit.util.InvertibleFunction;
 
 /**
  * Reversible in-place vector transformations.
  *
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
  */
-public interface VectorTransformation {
+public interface VectorTransformation extends InvertibleFunction<Long2DoubleMap,Long2DoubleMap> {
     /**
      * Apply the vector transformation in-place to a vector.
      *

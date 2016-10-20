@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -27,6 +27,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.grouplens.lenskit.util.io.Describable;
+import org.grouplens.lenskit.util.io.DescriptionWriter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,7 +37,7 @@ import java.util.*;
 /**
  * Base class to make it easier to implement entities.
  */
-public abstract class AbstractEntity implements Entity {
+public abstract class AbstractEntity implements Entity, Describable {
     protected final EntityType type;
     protected final long id;
 
@@ -211,6 +213,14 @@ public abstract class AbstractEntity implements Entity {
             tsb.append(av.getTypedName().toString(), av.getValue());
         }
         return tsb.toString();
+    }
+
+    @Override
+    public void describeTo(DescriptionWriter writer) {
+        writer.putField("type", getType());
+        for (Attribute<?> av: getAttributes()) {
+            writer.putField(av.getTypedName().toString(), av.getValue());
+        }
     }
 
     private class MapView extends AbstractMap<String,Object> {

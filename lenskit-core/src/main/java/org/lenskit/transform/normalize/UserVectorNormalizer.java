@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,11 +18,13 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.grapht.annotation.DefaultImplementation;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
+import org.lenskit.util.InvertibleFunction;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,7 +60,9 @@ public interface UserVectorNormalizer {
      * @param target The vector to normalize. If {@code null}, the user vector is normalized.
      * @return The {@code target} vector, if specified. Otherwise, a fresh mutable vector
      *         containing a normalized copy of the user vector is returned.
+     * @deprecated Old vectors are going away.
      */
+    @Deprecated
     MutableSparseVector normalize(long user, @Nonnull SparseVector vector,
                                   @Nullable MutableSparseVector target);
 
@@ -68,7 +72,19 @@ public interface UserVectorNormalizer {
      *
      * @param user   The user ID to normalize for.
      * @param vector The user's vector to use as the reference vector.
-     * @return The vector transformaition normalizing for this user.
+     * @return The vector transformation normalizing for this user.
+     * @deprecated Use {@link #makeTransformation(long, Long2DoubleMap)}.
      */
+    @Deprecated
     VectorTransformation makeTransformation(long user, SparseVector vector);
+
+    /**
+     * Make a vector transformation for a user. The resulting transformation will be applied
+     * to user vectors to normalize and denormalize them.
+     *
+     * @param user   The user ID to normalize for.
+     * @param vector The user's vector to use as the reference vector.
+     * @return The vector transformation normalizing for this user.
+     */
+    InvertibleFunction<Long2DoubleMap,Long2DoubleMap> makeTransformation(long user, Long2DoubleMap vector);
 }

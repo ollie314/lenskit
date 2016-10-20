@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -23,8 +23,6 @@ package org.lenskit.knn.user;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import it.unimi.dsi.fastutil.longs.*;
-import org.grouplens.lenskit.transform.normalize.UserVectorNormalizer;
-import org.grouplens.lenskit.transform.normalize.VectorTransformation;
 import org.grouplens.lenskit.transform.threshold.Threshold;
 import org.grouplens.lenskit.vectors.ImmutableSparseVector;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
@@ -37,6 +35,8 @@ import org.lenskit.data.ratings.RatingVectorPDAO;
 import org.lenskit.knn.MinNeighbors;
 import org.lenskit.knn.NeighborhoodSize;
 import org.lenskit.results.Results;
+import org.lenskit.transform.normalize.UserVectorNormalizer;
+import org.lenskit.transform.normalize.VectorTransformation;
 import org.lenskit.util.collections.LongUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

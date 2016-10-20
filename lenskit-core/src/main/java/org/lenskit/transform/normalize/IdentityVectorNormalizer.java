@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,54 +18,65 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
-import org.lenskit.inject.Shareable;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
+import org.lenskit.inject.Shareable;
+import org.lenskit.util.keys.Long2DoubleSortedArrayMap;
 
 import java.io.Serializable;
 
 /**
- * Vector normlizer that subtracts the mean from every value.
+ * Identity normalization (makes no change).
+ *
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
  */
 @Shareable
-public class MeanCenteringVectorNormalizer extends AbstractVectorNormalizer implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class IdentityVectorNormalizer extends AbstractVectorNormalizer implements Serializable {
+    private static final long serialVersionUID = -6708410675383598691L;
 
-    @Override
-    public VectorTransformation makeTransformation(SparseVector reference) {
-        return new Transform(reference.mean());
-    }
-
-    private static class Transform implements VectorTransformation {
-        private final double mean;
-
-        public Transform(double mean) {
-            this.mean = mean;
-        }
+    private static final VectorTransformation IDENTITY_TRANSFORM = new VectorTransformation() {
 
         @Override
-        public MutableSparseVector apply(MutableSparseVector vector) {
-            vector.add(-mean);
+        public MutableSparseVector unapply(MutableSparseVector vector) {
             return vector;
         }
 
         @Override
-        public MutableSparseVector unapply(MutableSparseVector vector) {
-            vector.add(mean);
+        public MutableSparseVector apply(MutableSparseVector vector) {
             return vector;
         }
 
         @Override
         public double apply(long key, double value) {
-            return value - mean;
+            return value;
         }
 
         @Override
         public double unapply(long key, double value) {
-            return value + mean;
+            return value;
         }
+
+        @Override
+        public Long2DoubleMap apply(Long2DoubleMap vector) {
+            return Long2DoubleSortedArrayMap.create(vector);
+        }
+
+        @Override
+        public Long2DoubleMap unapply(Long2DoubleMap vector) {
+            return Long2DoubleSortedArrayMap.create(vector);
+        }
+    };
+
+    @Override
+    public VectorTransformation makeTransformation(SparseVector ratings) {
+        return IDENTITY_TRANSFORM;
+    }
+
+    @Override
+    public VectorTransformation makeTransformation(Long2DoubleMap reference) {
+        return IDENTITY_TRANSFORM;
     }
 }

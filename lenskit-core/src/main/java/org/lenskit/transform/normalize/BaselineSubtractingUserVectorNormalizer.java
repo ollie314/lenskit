@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,18 +18,23 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleFunction;
-import org.lenskit.api.Result;
-import org.lenskit.inject.Shareable;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
 import org.grouplens.lenskit.vectors.VectorEntry;
 import org.lenskit.api.ItemScorer;
+import org.lenskit.api.Result;
 import org.lenskit.baseline.BaselineScorer;
+import org.lenskit.inject.Shareable;
+import org.lenskit.util.InvertibleFunction;
 import org.lenskit.util.collections.LongUtils;
+import org.lenskit.util.keys.Long2DoubleSortedArrayMap;
+import org.lenskit.util.keys.SortedKeyIndex;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.Map;
@@ -60,6 +65,11 @@ public class BaselineSubtractingUserVectorNormalizer extends AbstractUserVectorN
         return new Transformation(user);
     }
 
+    @Override
+    public InvertibleFunction<Long2DoubleMap, Long2DoubleMap> makeTransformation(long user, Long2DoubleMap vector) {
+        return new Transformation(user);
+    }
+
     private class Transformation implements VectorTransformation {
         private final long user;
 
@@ -85,6 +95,45 @@ public class BaselineSubtractingUserVectorNormalizer extends AbstractUserVectorN
                 vector.set(e, e.getValue() + bf.get(e.getKey()));
             }
             return vector;
+        }
+
+        @Override
+        public Long2DoubleMap unapply(Long2DoubleMap input) {
+            if (input == null) return null;
+
+            Map<Long,Double> base = baselineScorer.score(user, input.keySet());
+
+            SortedKeyIndex idx = SortedKeyIndex.fromCollection(input.keySet());
+            int n = idx.size();
+            double[] values = new double[n];
+            for (int i = 0; i < n; i++) {
+                long k = idx.getKey(i);
+                Double bp = base.get(k);
+                double bpv = bp != null ? bp : 0;
+                values[i] = input.get(idx.getKey(i)) + bpv;
+            }
+
+            return Long2DoubleSortedArrayMap.wrap(idx, values);
+        }
+
+        @Nullable
+        @Override
+        public Long2DoubleMap apply(@Nullable Long2DoubleMap input) {
+            if (input == null) return null;
+
+            Map<Long,Double> base = baselineScorer.score(user, input.keySet());
+
+            SortedKeyIndex idx = SortedKeyIndex.fromCollection(input.keySet());
+            int n = idx.size();
+            double[] values = new double[n];
+            for (int i = 0; i < n; i++) {
+                long k = idx.getKey(i);
+                Double bp = base.get(k);
+                double bpv = bp != null ? bp : 0;
+                values[i] = input.get(idx.getKey(i)) - bpv;
+            }
+
+            return Long2DoubleSortedArrayMap.wrap(idx, values);
         }
 
         @Override

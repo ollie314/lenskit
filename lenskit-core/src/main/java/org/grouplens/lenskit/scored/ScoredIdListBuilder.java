@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -53,6 +53,7 @@ import static it.unimi.dsi.fastutil.Arrays.quickSort;
  * @deprecated Scored IDs are going away in LensKit 3.0.
  */
 @Deprecated
+@SuppressWarnings("deprecation")
 public class ScoredIdListBuilder implements Builder<PackedScoredIdList> {
     // INVARIANT: all arrays (including channel arrays) have same size, which is capacity
     // INVARIANT: all arrays are non-null unless finish() has been called

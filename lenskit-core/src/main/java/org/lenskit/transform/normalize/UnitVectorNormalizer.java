@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,12 +18,16 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
-import org.lenskit.inject.Shareable;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
+import org.lenskit.inject.Shareable;
+import org.lenskit.util.InvertibleFunction;
+import org.lenskit.util.math.Vectors;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.Serializable;
 
@@ -68,6 +72,16 @@ public class UnitVectorNormalizer extends AbstractVectorNormalizer implements Se
         }
     }
 
+    @Override
+    public InvertibleFunction<Long2DoubleMap, Long2DoubleMap> makeTransformation(Long2DoubleMap reference) {
+        double s = Vectors.euclideanNorm(reference);
+        if (Math.abs(s) < tolerance) {
+            return new IdentityVectorNormalizer().makeTransformation(reference);
+        } else {
+            return new ScalingTransform(s);
+        }
+    }
+
     static class ScalingTransform implements VectorTransformation {
         final double factor;
 
@@ -87,6 +101,16 @@ public class UnitVectorNormalizer extends AbstractVectorNormalizer implements Se
             return vector;
         }
 
+        @Override
+        public Long2DoubleMap unapply(Long2DoubleMap input) {
+            return input == null ? null : Vectors.multiplyScalar(input, factor);
+        }
+
+        @Nullable
+        @Override
+        public Long2DoubleMap apply(@Nullable Long2DoubleMap input) {
+            return input == null ? null : Vectors.multiplyScalar(input, 1.0 / factor);
+        }
         @Override
         public double apply(long key, double value) {
             return value / factor;

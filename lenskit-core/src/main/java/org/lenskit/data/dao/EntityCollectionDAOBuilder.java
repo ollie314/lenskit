@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -23,6 +23,7 @@ package org.lenskit.data.dao;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.grouplens.lenskit.util.io.DescriptionWriter;
 import org.lenskit.data.entities.*;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -116,7 +117,7 @@ public class EntityCollectionDAOBuilder {
      * @param entities The entity list.
      * @return The builder (for chaining).
      */
-    public EntityCollectionDAOBuilder addEntities(Iterable<Entity> entities) {
+    public EntityCollectionDAOBuilder addEntities(Iterable<? extends Entity> entities) {
         for (Entity e: entities) {
             addEntity(e);
         }

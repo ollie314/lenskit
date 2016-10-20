@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -24,8 +24,11 @@ import it.unimi.dsi.fastutil.doubles.DoubleIterator;
 import it.unimi.dsi.fastutil.longs.Long2DoubleFunction;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.lenskit.util.keys.Long2DoubleSortedArrayMap;
+import org.lenskit.util.keys.SortedKeyIndex;
 
+import javax.annotation.Nonnull;
 import java.util.Iterator;
 
 /**
@@ -172,6 +175,100 @@ public final class Vectors {
      */
     public static double mean(Long2DoubleMap vec) {
         return sum(vec) / vec.size();
+    }
+
+    /**
+     * Add a vector to another (scaled) vector and a scalar.  The result is \\(x_i + s_y y_i + o\\).
+     *
+     * @param x The source vector.
+     * @param y The addition vector.  {@link Long2DoubleFunction#defaultReturnValue()} is assumed for missing values.
+     * @param sy The scale by which elements of {@code y} are multipled.
+     * @param o The offset to add.
+     * @return A vector with the same keys as {@code x}, transformed by the specified linear formula.
+     */
+    public static Long2DoubleMap combine(Long2DoubleMap x, Long2DoubleFunction y, double sy, double o) {
+        SortedKeyIndex idx = SortedKeyIndex.fromCollection(x.keySet());
+        final int n = idx.size();
+        double[] values = new double[n];
+
+        if (x instanceof Long2DoubleSortedArrayMap) {
+            // TODO make this fast for two sorted maps
+            Long2DoubleSortedArrayMap sx = (Long2DoubleSortedArrayMap) x;
+            assert idx == sx.keySet().getIndex();
+            for (int i = 0; i < n; i++) {
+                values[i] = sx.getValueByIndex(i) + y.get(idx.getKey(i)) * sy + o;
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                long k = idx.getKey(i);
+                values[i] = x.get(k) + y.get(k) * sy + o;
+            }
+        }
+
+        return Long2DoubleSortedArrayMap.wrap(idx, values);
+    }
+
+    /**
+     * Add a scalar to each element of a vector.
+     * @param vec The vector to rescale.
+     * @param val The value to add.
+     * @return A new map with every value in {@code vec} increased by {@code val}.
+     */
+    public static Long2DoubleMap addScalar(Long2DoubleMap vec, double val) {
+        SortedKeyIndex keys = SortedKeyIndex.fromCollection(vec.keySet());
+        final int n = keys.size();
+        double[] values = new double[n];
+        if (vec instanceof Long2DoubleSortedArrayMap) {
+            Long2DoubleSortedArrayMap sorted = (Long2DoubleSortedArrayMap) vec;
+            for (int i = 0; i < n; i++) {
+                assert sorted.getKeyByIndex(i) == keys.getKey(i);
+                values[i] = sorted.getValueByIndex(i) + val;
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                values[i] = vec.get(keys.getKey(i)) + val;
+            }
+        }
+
+        return Long2DoubleSortedArrayMap.wrap(keys, values);
+    }
+
+    /**
+     * Multiply each element of a vector by a scalar.
+     * @param vector The vector.
+     * @param value The scalar to multiply.
+     * @return A new vector consisting of the same keys as `vector`, with `value` multipled by each.
+     */
+    @Nonnull
+    public static Long2DoubleMap multiplyScalar(Long2DoubleMap vector, double value) {
+        // TODO Consier implementing this in terms of transform
+        SortedKeyIndex idx = SortedKeyIndex.fromCollection(vector.keySet());
+        int n = idx.size();
+        double[] values = new double[n];
+        for (int i = 0; i < n; i++) {
+            values[i] = vector.get(idx.getKey(i)) * value;
+        }
+
+        return Long2DoubleSortedArrayMap.wrap(idx, values);
+    }
+
+    /**
+     * Transform the values of a vector.
+     *
+     * @param input The vector to transform.
+     * @param function The transformation to apply.
+     * @return A new vector that is the result of applying `function` to each value in `input`.
+     */
+    public static Long2DoubleMap transform(Long2DoubleMap input, UnivariateFunction function) {
+        // FIXME Improve performance when input is also sorted
+        SortedKeyIndex idx = SortedKeyIndex.fromCollection(input.keySet());
+        int n = idx.size();
+        double[] values = new double[n];
+        for (int i = 0; i < n; i++) {
+            values[i] = function.value(input.get(idx.getKey(i)));
+        }
+
+        return Long2DoubleSortedArrayMap.wrap(idx, values);
     }
 
     private static class DftAdaptingL2DFunction implements Long2DoubleFunction {

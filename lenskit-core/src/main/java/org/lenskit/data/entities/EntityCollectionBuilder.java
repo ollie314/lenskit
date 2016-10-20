@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -20,8 +20,14 @@
  */
 package org.lenskit.data.entities;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import org.grouplens.lenskit.util.io.DescriptionWriter;
+import org.grouplens.lenskit.util.io.Descriptions;
+import org.grouplens.lenskit.util.io.HashDescriptionWriter;
 import org.lenskit.util.keys.KeyedObjectMap;
 import org.lenskit.util.keys.KeyedObjectMapBuilder;
 import org.slf4j.Logger;
@@ -41,6 +47,7 @@ public class EntityCollectionBuilder {
     private final EntityType type;
     private KeyedObjectMapBuilder<Entity> store;
     private Map<String,EntityIndexBuilder> indexBuilders;
+    private Hasher hasher = Hashing.md5().newHasher();
 
     public EntityCollectionBuilder(EntityType type) {
         this.type = type;
@@ -103,6 +110,7 @@ public class EntityCollectionBuilder {
         }
 
         store.add(e);
+        hasher.putString(e.toString(), Charsets.UTF_8);
         for (EntityIndexBuilder ib: indexBuilders.values()) {
             ib.add(e);
         }
@@ -154,6 +162,6 @@ public class EntityCollectionBuilder {
                      map.size(), type, idxMap.size());
         store = null;
         indexBuilders = null;
-        return new EntityCollection(type, map, idxMap);
+        return new EntityCollection(type, map, idxMap, hasher.hash());
     }
 }

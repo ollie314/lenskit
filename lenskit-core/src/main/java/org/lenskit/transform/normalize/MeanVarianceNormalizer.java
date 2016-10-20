@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -18,24 +18,32 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-package org.grouplens.lenskit.transform.normalize;
+package org.lenskit.transform.normalize;
 
 import com.google.common.base.Preconditions;
 import it.unimi.dsi.fastutil.doubles.DoubleIterator;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
+import org.apache.commons.math3.analysis.FunctionUtils;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.function.Add;
+import org.apache.commons.math3.analysis.function.Multiply;
+import org.apache.commons.math3.analysis.function.Subtract;
 import org.grouplens.grapht.annotation.DefaultProvider;
-import org.lenskit.inject.Shareable;
-import org.lenskit.inject.Transient;
-import org.lenskit.baseline.MeanDamping;
-import org.lenskit.util.io.ObjectStream;
-import org.lenskit.data.dao.EventDAO;
-import org.lenskit.data.ratings.Rating;
 import org.grouplens.lenskit.vectors.MutableSparseVector;
 import org.grouplens.lenskit.vectors.SparseVector;
 import org.grouplens.lenskit.vectors.VectorEntry;
+import org.lenskit.baseline.MeanDamping;
+import org.lenskit.data.dao.EventDAO;
+import org.lenskit.data.ratings.Rating;
+import org.lenskit.inject.Shareable;
+import org.lenskit.inject.Transient;
+import org.lenskit.util.io.ObjectStream;
 import org.lenskit.util.math.Scalars;
+import org.lenskit.util.math.Vectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
@@ -171,10 +179,15 @@ public class MeanVarianceNormalizer extends AbstractVectorNormalizer implements 
 
     @Override
     public VectorTransformation makeTransformation(SparseVector reference) {
+        return makeTransformation(reference.asMap());
+    }
+
+    @Override
+    public VectorTransformation makeTransformation(Long2DoubleMap reference) {
         if (reference.isEmpty()) {
             return new IdentityVectorNormalizer().makeTransformation(reference);
         } else {
-            final double mean = reference.mean();
+            final double mean = Vectors.mean(reference);
 
             double var = 0;
             DoubleIterator iter = reference.values().iterator();
@@ -199,10 +212,28 @@ public class MeanVarianceNormalizer extends AbstractVectorNormalizer implements 
     class Transform implements VectorTransformation {
         private final double mean;
         private final double stdev;
+        private final UnivariateFunction function;
+        private final UnivariateFunction inverse;
 
         public Transform(double m, double sd) {
             mean = m;
             stdev = sd;
+
+            // set up the function
+            UnivariateFunction op = FunctionUtils.fix2ndArgument(new Subtract(), mean);
+            if (!Scalars.isZero(stdev)) {
+                // we have a standard deviation, divide by it
+                op = FunctionUtils.compose(FunctionUtils.fix2ndArgument(new Multiply(), 1.0 / stdev), op);
+            }
+            function = op;
+
+            // set up its inverse
+            op = FunctionUtils.fix2ndArgument(new Add(), mean);
+            if (!Scalars.isZero(stdev)) {
+                // we have a standard deviation, first multiply it
+                op = FunctionUtils.compose(op, FunctionUtils.fix2ndArgument(new Multiply(), stdev));
+            }
+            inverse = op;
         }
 
         @Override
@@ -224,6 +255,21 @@ public class MeanVarianceNormalizer extends AbstractVectorNormalizer implements 
                 vector.set(rating, val + mean);
             }
             return vector;
+        }
+
+        @Override
+        public Long2DoubleMap unapply(Long2DoubleMap input) {
+            if (input == null) return null;
+
+            return Vectors.transform(input, inverse);
+        }
+
+        @Nullable
+        @Override
+        public Long2DoubleMap apply(@Nullable Long2DoubleMap input) {
+            if (input == null) return null;
+
+            return Vectors.transform(input, function);
         }
 
         @Override

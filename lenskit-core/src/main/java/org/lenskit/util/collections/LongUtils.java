@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -177,6 +177,23 @@ public final class LongUtils {
     }
 
     /**
+     * Get a Fastutil {@link LongSet} from a {@link java.util.Collection} of longs.
+     *
+     * @param longs The set of longs.
+     * @return {@code longs} as a fastutil {@link LongSet}. If {@code longs} is already
+     *         a LongSet, it is cast.
+     */
+    public static LongSet asLongSet(@Nullable final Collection<Long> longs) {
+        if (longs == null) {
+            return null;
+        } else if (longs instanceof Set) {
+            return asLongSet((Set<Long>) longs);
+        } else {
+            return SortedKeyIndex.fromCollection(longs).keySet();
+        }
+    }
+
+    /**
      * Compute the ranks for a list of longs.
      * @param results The list of longs.
      * @return The map of ranks; its default return value will be -1.
@@ -292,6 +309,23 @@ public final class LongUtils {
      * @param b The second set.
      * @return The elements of <var>items</var> that are not in <var>exclude</var>.
      */
+    public static LongSortedSet setUnion(LongSet a, LongSet b) {
+        if (a instanceof LongSortedSet && b instanceof LongSortedSet) {
+            return setUnion((LongSortedSet) a, (LongSortedSet) b);
+        } else {
+            LongSet set = new LongOpenHashSet(a);
+            set.addAll(b);
+            return packedSet(set);
+        }
+    }
+
+    /**
+     * Compute the union of two sets.
+     *
+     * @param a The first set.
+     * @param b The second set.
+     * @return The elements of <var>items</var> that are not in <var>exclude</var>.
+     */
     public static LongSortedSet setUnion(LongSortedSet a, LongSortedSet b) {
         long[] data = new long[unionSize(a, b)];
 
@@ -327,6 +361,71 @@ public final class LongUtils {
         assert i == data.length;
 
         return SortedKeyIndex.wrap(data, data.length).keySet();
+    }
+
+    /**
+     * Compute the intersection of two sets.
+     *
+     * @param a The first set.
+     * @param b The second set.
+     * @return The elements present in both sets.
+     */
+    public static LongSortedSet setIntersect(LongSet a, LongSet b) {
+        if (a instanceof LongSortedSet && b instanceof LongSortedSet) {
+            return setIntersect((LongSortedSet) a, (LongSortedSet) b);
+        } else if (a.size() <= b.size()) {
+            LongArrayList longs = new LongArrayList(Math.min(a.size(), b.size()));
+            LongIterator iter = a.iterator();
+            while (iter.hasNext()) {
+                long key = iter.nextLong();
+                if (b.contains(key)) {
+                    longs.add(key);
+                }
+            }
+            return LongUtils.packedSet(longs);
+        } else {
+            return setIntersect(b, a);
+        }
+    }
+
+    /**
+     * Compute the intersection of two sets.
+     *
+     * @param a The first set.
+     * @param b The second set.
+     * @return The elements present in both sets.
+     */
+    public static LongSortedSet setIntersect(LongSortedSet a, LongSortedSet b) {
+        long[] data = new long[Math.min(a.size(), b.size())];
+
+        LongIterator ait = a.iterator();
+        LongIterator bit = b.iterator();
+        boolean hasA = ait.hasNext();
+        boolean hasB = bit.hasNext();
+        long nextA = hasA ? ait.nextLong() : Long.MAX_VALUE;
+        long nextB = hasB ? bit.nextLong() : Long.MAX_VALUE;
+        int i = 0;
+        while (hasA && hasB) {
+            if (nextA < nextB) {
+                hasA = ait.hasNext();
+                nextA = hasA ? ait.nextLong() : Long.MAX_VALUE;
+            } else if (nextB < nextA) {
+                hasB = bit.hasNext();
+                nextB = hasB ? bit.nextLong() : Long.MAX_VALUE;
+            } else {
+                // they're both present and equal, use A but advance both
+                data[i++] = nextA;
+                hasA = ait.hasNext();
+                nextA = hasA ? ait.nextLong() : Long.MAX_VALUE;
+                hasB = bit.hasNext();
+                nextB = hasB ? bit.nextLong() : Long.MAX_VALUE;
+            }
+        }
+        if (data.length > i + i / 2) {
+            data = Arrays.copyOf(data, i);
+        }
+
+        return SortedKeyIndex.wrap(data, i).keySet();
     }
 
     /**

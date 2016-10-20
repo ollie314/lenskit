@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -61,7 +61,7 @@ public abstract class SortedKeyIndex implements KeyIndex, Serializable {
      */
     public static SortedKeyIndex fromCollection(Collection<Long> keys) {
         if (keys instanceof LongSortedArraySet) {
-            return ((LongSortedArraySet) keys).getDomain();
+            return ((LongSortedArraySet) keys).getIndex();
         } else {
             return fromIterator(keys.size(), keys.iterator());
         }
@@ -304,7 +304,7 @@ public abstract class SortedKeyIndex implements KeyIndex, Serializable {
      * Get a view of the index as a set.
      * @return The set of keys.
      */
-    public LongSortedSet keySet() {
+    public LongSortedArraySet keySet() {
         return new LongSortedArraySet(this);
     }
 

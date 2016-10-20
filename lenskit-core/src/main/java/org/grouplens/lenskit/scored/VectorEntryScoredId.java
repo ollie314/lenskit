@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -42,6 +42,7 @@ import java.util.Collection;
  * @since 1.1
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
  */
+@SuppressWarnings("deprecation")
 class VectorEntryScoredId extends AbstractScoredId {
 
     private final SparseVector vector;

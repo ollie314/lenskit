@@ -1,6 +1,6 @@
 /*
  * LensKit, an open source recommender systems toolkit.
- * Copyright 2010-2014 LensKit Contributors.  See CONTRIBUTORS.md.
+ * Copyright 2010-2016 LensKit Contributors.  See CONTRIBUTORS.md.
  * Work on LensKit has been funded by the National Science Foundation under
  * grants IIS 05-34939, 08-08692, 08-12148, and 10-17697.
  *
@@ -27,8 +27,6 @@ import org.grouplens.grapht.reflect.Satisfaction
 import org.grouplens.grapht.reflect.internal.InstanceSatisfaction
 import org.grouplens.lenskit.iterative.StoppingThreshold
 import org.grouplens.lenskit.iterative.ThresholdStoppingCondition
-import org.grouplens.lenskit.transform.normalize.MeanVarianceNormalizer
-import org.grouplens.lenskit.transform.normalize.VectorNormalizer
 import org.grouplens.lenskit.util.io.CompressionMode
 import org.junit.Before
 import org.junit.Ignore
@@ -44,6 +42,8 @@ import org.lenskit.data.dao.EventCollectionDAO
 import org.lenskit.data.dao.file.StaticDataSource
 import org.lenskit.data.ratings.RatingMatrix
 import org.lenskit.inject.Shareable
+import org.lenskit.transform.normalize.MeanVarianceNormalizer
+import org.lenskit.transform.normalize.VectorNormalizer
 
 import javax.inject.Inject
 import javax.inject.Provider
